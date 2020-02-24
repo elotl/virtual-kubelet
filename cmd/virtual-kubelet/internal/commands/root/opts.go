@@ -30,7 +30,8 @@ const (
 	DefaultNodeName             = "virtual-kubelet"
 	DefaultOperatingSystem      = "Linux"
 	DefaultInformerResyncPeriod = 1 * time.Minute
-	DefaultMetricsAddr          = ":10255"
+	DefaultPodMetricsAddr       = ":10255"
+	DefaultVKMetricsAddr        = ":10300"
 	DefaultListenPort           = 10250 // TODO(cpuguy83)(VK1.0): Change this to an addr instead of just a port.. we should not be listening on all interfaces.
 	DefaultPodSyncWorkers       = 10
 	DefaultKubeNamespace        = corev1.NamespaceAll
@@ -71,7 +72,8 @@ type Opts struct {
 	TaintEffect  string
 	DisableTaint bool
 
-	MetricsAddr string
+	PodMetricsAddr string
+	VKMetricsAddr string
 
 	// Number of workers to use to handle pod notifications
 	PodSyncWorkers       int
@@ -110,8 +112,12 @@ func SetDefaultOpts(c *Opts) error {
 		c.InformerResyncPeriod = DefaultInformerResyncPeriod
 	}
 
-	if c.MetricsAddr == "" {
-		c.MetricsAddr = DefaultMetricsAddr
+	if c.PodMetricsAddr == "" {
+		c.PodMetricsAddr = DefaultPodMetricsAddr
+	}
+
+	if c.VKMetricsAddr == "" {
+		c.VKMetricsAddr = DefaultVKMetricsAddr
 	}
 
 	if c.PodSyncWorkers == 0 {

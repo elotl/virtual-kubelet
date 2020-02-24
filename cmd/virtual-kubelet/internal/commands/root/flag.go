@@ -65,7 +65,8 @@ func installFlags(flags *pflag.FlagSet, c *Opts) {
 	flags.StringVar(&c.OperatingSystem, "os", c.OperatingSystem, "Operating System (Linux/Windows)")
 	flags.StringVar(&c.Provider, "provider", c.Provider, "cloud provider")
 	flags.StringVar(&c.ProviderConfigPath, "provider-config", c.ProviderConfigPath, "cloud provider configuration file")
-	flags.StringVar(&c.MetricsAddr, "metrics-addr", c.MetricsAddr, "address to listen for metrics/stats requests")
+	flags.StringVar(&c.PodMetricsAddr, "pod-metrics-addr", c.PodMetricsAddr, "address to listen for pod metrics/stats requests")
+	flags.StringVar(&c.VKMetricsAddr, "vk-metrics-addr", c.VKMetricsAddr, "address to listen for virtual kubelet metrics/stats requests")
 
 	flags.StringVar(&c.TaintKey, "taint", c.TaintKey, "Set node taint key")
 	flags.BoolVar(&c.DisableTaint, "disable-taint", c.DisableTaint, "disable the virtual-kubelet node taint")

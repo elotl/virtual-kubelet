@@ -28,6 +28,8 @@ import (
 	"github.com/virtual-kubelet/virtual-kubelet/cmd/virtual-kubelet/internal/provider"
 	"github.com/virtual-kubelet/virtual-kubelet/log"
 	"github.com/virtual-kubelet/virtual-kubelet/node/api"
+
+        "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // AcceptedCiphers is the list of accepted TLS ciphers, with known weak ciphers elided
@@ -106,10 +108,10 @@ func setupHTTPServer(ctx context.Context, p provider.Provider, cfg *apiServerCon
 		closers = append(closers, s)
 	}
 
-	if cfg.MetricsAddr == "" {
+	if cfg.PodMetricsAddr == "" {
 		log.G(ctx).Info("Pod metrics server not setup due to empty metrics address")
 	} else {
-		l, err := net.Listen("tcp", cfg.MetricsAddr)
+		l, err := net.Listen("tcp", cfg.PodMetricsAddr)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not setup listener for pod metrics http server")
 		}
@@ -131,6 +133,23 @@ func setupHTTPServer(ctx context.Context, p provider.Provider, cfg *apiServerCon
 		closers = append(closers, s)
 	}
 
+	if cfg.VKMetricsAddr == "" {
+		log.G(ctx).Info("Virtual Kubelet metrics server not setup due to empty metrics address")
+	} else {
+
+		l, err := net.Listen("tcp", cfg.VKMetricsAddr)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not setup listener for virtual kubelet metrics http server")
+		}
+
+		mux := http.NewServeMux()
+                mux.Handle("/vk-metrics", promhttp.Handler())
+		s := &http.Server{
+			Handler: mux,
+		}
+		go serveHTTP(ctx, s, l, "virtual kubelet metrics")
+		closers = append(closers, s)
+	}
 	return cancel, nil
 }
 
@@ -149,7 +168,8 @@ type apiServerConfig struct {
 	CertPath              string
 	KeyPath               string
 	Addr                  string
-	MetricsAddr           string
+	PodMetricsAddr        string
+	VKMetricsAddr         string
 	StreamIdleTimeout     time.Duration
 	StreamCreationTimeout time.Duration
 }
@@ -161,7 +181,8 @@ func getAPIConfig(c Opts) (*apiServerConfig, error) {
 	}
 
 	config.Addr = fmt.Sprintf(":%d", c.ListenPort)
-	config.MetricsAddr = c.MetricsAddr
+	config.PodMetricsAddr = c.PodMetricsAddr
+	config.VKMetricsAddr = c.VKMetricsAddr
 	config.StreamIdleTimeout = c.StreamIdleTimeout
 	config.StreamCreationTimeout = c.StreamCreationTimeout
 
